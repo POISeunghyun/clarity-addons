@@ -14,6 +14,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
 import { ClrDatagrid, ClrDatagridColumn } from '@clr/angular';
 
+interface ColumnOrderChangedEvent<T> {
+  columns: T[];
+  from?: number;
+  to?: number;
+  trigger: 'init' | 'drag' | 'reset';
+}
+
 @Directive({
   selector: '[clrDatagridColumnReorder]',
   host: {
@@ -24,12 +31,20 @@ import { ClrDatagrid, ClrDatagridColumn } from '@clr/angular';
 export class DatagridColumnReorderDirective<T extends { name: string }> implements OnInit {
   @Input('clrDatagridColumnReorder') columnDefinitions: T[] = [];
 
-  @Output('clrDatagridColumnOrderChanged') columnOrderChanged = new EventEmitter<{
-    columns: T[];
-    from?: number;
-    to?: number;
-    trigger: 'init' | 'drag';
-  }>();
+  @Output('clrDatagridColumnOrderChanged') columnOrderChanged = Object.assign(
+    new EventEmitter<ColumnOrderChangedEvent<T>>(),
+    {
+      emit: (value: ColumnOrderChangedEvent<T>) => {
+        this.columnOrderChanged.next(value);
+        // after change detection, columns need to be rerendered first
+        setTimeout(() => this.updateSeparatorVisibility(), 0);
+        // After Angular has reordered the DOM,
+        // force Clarity to re-project columns in the new order by triggering its render cycle.
+        // DatagridRenderOrganizer is not publicly exported, so we access it via the datagrid instance.
+        setTimeout(() => (this.datagrid as any).organizer?.resize());
+      },
+    }
+  );
 
   @ContentChildren(ClrDatagridColumn) public clrColumns: QueryList<ClrDatagridColumn>;
 
@@ -61,9 +76,10 @@ export class DatagridColumnReorderDirective<T extends { name: string }> implemen
   public initializeColumnOrder(storedOrder: Record<string, number>) {
     const orderedColumns = this.reconcileColumnOrder(this.columnDefinitions, storedOrder);
     this.columnOrderChanged.emit({ columns: orderedColumns, trigger: 'init' });
+  }
 
-    // after change detection, columns need to be rerendered first
-    setTimeout(() => this.updateSeparatorVisibility(), 0);
+  public resetColumnOrder(columns: T[]): void {
+    this.columnOrderChanged.emit({ columns, trigger: 'reset' });
   }
 
   // This is needed in case there is a new column, which is not stored in the storage.
@@ -81,7 +97,7 @@ export class DatagridColumnReorderDirective<T extends { name: string }> implemen
   private updateColumnOrder(dragPreviousIndex: number, dragCurrentIndex: number): void {
     // we need to divide the indexes by two, because each column has two draggable elements:
     // - the column itself and the resize handle
-    const from = dragPreviousIndex / 2;
+    const from = Math.floor((dragPreviousIndex + 1) / 2);
     const to = Math.floor((dragCurrentIndex + 1) / 2);
     if (from === to) {
       // no change, do nothing
@@ -91,9 +107,6 @@ export class DatagridColumnReorderDirective<T extends { name: string }> implemen
     const columnDefinitionCopy = [...this.columnDefinitions];
     moveItemInArray(columnDefinitionCopy, from, to);
     this.columnOrderChanged.emit({ columns: columnDefinitionCopy, from, to, trigger: 'drag' });
-
-    // after change detection, columns need to be rerendered first
-    setTimeout(() => this.updateSeparatorVisibility(), 0);
   }
 
   // show separator for all but the last visible column
