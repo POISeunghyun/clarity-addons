@@ -1,0 +1,57 @@
+<clr-doc-wrapper [title]="title" [showTabs]="false">
+  <article>
+    <h5 class="component-summary">
+      Clarity Addons extensions for the native Clarity <code class="clr-code">clr-tooltip</code> component.
+    </h5>
+
+    <p>
+      As the native Clarity tooltip component only supports fixed widths, the
+      <code class="clr-code">clr-tooltip-fit-content</code> css class can be used to set the tooltip bubble's width to
+      fit its content instead. It simply applies <code class="clr-code">width: fit-content !important;</code> to the
+      element, making the bubble's width adjust to the text width. Note that this class is restricted to the
+      <code class="clr-code">clr-tooltip-content</code> element exclusively.
+    </p>
+
+    <div id="code-examples">
+      <h3 id="examples">Examples</h3>
+
+      <h4>Side-by-side comparison</h4>
+      <p>
+        Hover both icons to compare the default fixed-width Clarity tooltip against the
+        <code class="clr-code">clr-tooltip-fit-content</code> variant.
+      </p>
+
+      <div class="clr-row">
+        <div class="clr-col-auto">
+          <p class="p2"><strong>Default Clarity tooltip</strong> (fixed width to "md")</p>
+          <clr-tooltip>
+            <cds-icon clrTooltipTrigger shape="info-standard" size="24"></cds-icon>
+            <clr-tooltip-content clrSize="md" clrPosition="bottom-right" *clrIfOpen> Short tip </clr-tooltip-content>
+          </clr-tooltip>
+        </div>
+        <div class="clr-col-auto">
+          <p class="p2">
+            <strong>With <code class="clr-code">clr-tooltip-fit-content</code></strong>
+          </p>
+          <clr-tooltip>
+            <cds-icon clrTooltipTrigger shape="info-standard" size="24"></cds-icon>
+            <clr-tooltip-content class="clr-tooltip-fit-content" clrSize="md" clrPosition="bottom-right" *clrIfOpen>
+              Short tip
+            </clr-tooltip-content>
+          </clr-tooltip>
+        </div>
+      </div>
+
+      <br />
+      <hr />
+
+      <h4>Real-world usage in <code class="clr-code">clr-copy-to-clipboard</code></h4>
+      <p>
+        The <code class="clr-code">clr-copy-to-clipboard</code> component applies
+        <code class="clr-code">clr-tooltip-fit-content</code> class internally on its own
+        <code class="clr-code">clr-tooltip-content</code>, so the "Copy to clipboard" bubble is always sized to its text
+        rather than stretching to a fixed Clarity size. No extra input is needed on the component itself.
+      </p>
+    </div>
+  </article>
+</clr-doc-wrapper>
